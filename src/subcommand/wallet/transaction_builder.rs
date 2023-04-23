@@ -116,7 +116,7 @@ impl TransactionBuilder {
   const ADDITIONAL_OUTPUT_VBYTES: usize = 43;
   const MAX_POSTAGE: Amount = Amount::from_sat(2 * 10_000);
   const SCHNORR_SIGNATURE_SIZE: usize = 64;
-  pub(crate) const TARGET_POSTAGE: Amount = Amount::from_sat(10_000);
+  pub(crate) const TARGET_POSTAGE: Amount = Amount::from_sat(546);
 
   pub fn build_transaction_with_postage(
     outgoing: SatPoint,
@@ -886,7 +886,7 @@ mod tests {
         output: vec![
           tx_out(4_950, change(1)),
           tx_out(TransactionBuilder::TARGET_POSTAGE.to_sat(), recipient()),
-          tx_out(14_831, change(0)),
+          tx_out(24_285, change(0)),
         ],
       })
     )
@@ -1016,7 +1016,7 @@ mod tests {
         input: vec![tx_in(outpoint(1))],
         output: vec![
           tx_out(TransactionBuilder::TARGET_POSTAGE.to_sat(), recipient()),
-          tx_out(989_870, change(1))
+          tx_out(999_324, change(1))
         ],
       })
     )
@@ -1598,22 +1598,23 @@ mod tests {
 
   #[test]
   fn output_over_max_postage_because_fees_prevent_excess_value_stripping() {
+    let result = TransactionBuilder::build_transaction_with_postage(
+      satpoint(1, 0),
+      BTreeMap::new(),
+      vec![(outpoint(1), Amount::from_sat(35000))]
+        .into_iter()
+        .collect(),
+      recipient(),
+      [change(0), change(1)],
+      FeeRate::try_from(250.0).unwrap(),
+    );
     pretty_assert_eq!(
-      TransactionBuilder::build_transaction_with_postage(
-        satpoint(1, 0),
-        BTreeMap::new(),
-        vec![(outpoint(1), Amount::from_sat(45000))]
-          .into_iter()
-          .collect(),
-        recipient(),
-        [change(0), change(1)],
-        FeeRate::try_from(250.0).unwrap(),
-      ),
+      result,
       Ok(Transaction {
         version: 1,
         lock_time: PackedLockTime::ZERO,
         input: vec![tx_in(outpoint(1))],
-        output: vec![tx_out(20250, recipient())],
+        output: vec![tx_out(10250, recipient())],
       }),
     );
   }
